@@ -158,7 +158,10 @@ async def _check_safety(text: str, policy: str) -> tuple[bool, str]:
             {"role": "user", "content": text},
         ],
         reasoning_effort="low",
+        max_completion_tokens=256,
     )
+    if getattr(response.choices[0], "finish_reason", None) == "length":
+        raise ValueError("Safety guard completion was truncated")
     raw = (response.choices[0].message.content or "").strip()
     raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:

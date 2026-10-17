@@ -36,6 +36,14 @@ def _blocked() -> dict:
     return {"type": "text", "message": GUARDRAIL_BLOCKED_MESSAGE, "data": None}
 
 
+def _unavailable() -> dict:
+    return {
+        "type": "text",
+        "message": "Shopping assistant is temporarily unavailable. Please wait a minute and try again.",
+        "data": None,
+    }
+
+
 async def run_chat(message: str) -> dict:
     """
     Run one user message through the guardrails and the shopping agent.
@@ -57,7 +65,7 @@ async def run_chat(message: str) -> dict:
             return _blocked()
     except Exception:
         logfire.exception("Guardrail unavailable; refusing request")
-        return _blocked()
+        return _unavailable()
 
     deps = StoreDeps()
     try:
@@ -71,7 +79,7 @@ async def run_chat(message: str) -> dict:
                 return _blocked()
         except Exception:
             logfire.exception("Output guardrail unavailable; refusing response")
-            return _blocked()
+            return _unavailable()
 
         if deps.found_products:
             return {"type": "products", "message": text_reply, "data": deps.found_products}

@@ -28,7 +28,7 @@ def test_guard_failure_never_runs_agent(ai, monkeypatch):
     agent = SimpleNamespace(run=AsyncMock())
     monkeypatch.setattr(pipeline, 'agent', agent)
     response = asyncio.run(pipeline.run_chat('show shirts'))
-    assert response == pipeline._blocked()
+    assert response == pipeline._unavailable()
     agent.run.assert_not_called()
 
 
@@ -36,7 +36,7 @@ def test_output_failure_never_leaks_reply(ai, monkeypatch):
     pipeline, _ = ai
     monkeypatch.setattr(pipeline, 'agent', SimpleNamespace(run=AsyncMock(return_value=SimpleNamespace(output='unscreened reply'))))
     monkeypatch.setattr(pipeline, 'violates_output_policy', AsyncMock(side_effect=RuntimeError('provider unavailable')))
-    assert asyncio.run(pipeline.run_chat('shirt')) == pipeline._blocked()
+    assert asyncio.run(pipeline.run_chat('shirt')) == pipeline._unavailable()
 
 
 @pytest.mark.parametrize('raw', ['garbage', '{}', '{"violation": "0"}', '{"violation": 2}', '[]'])
@@ -62,3 +62,36 @@ def test_normal_chat_and_independent_run_state(ai, monkeypatch):
     first, second = pipeline.StoreDeps(), pipeline.StoreDeps()
     first.found_products.append({'name': 'Shirt'})
     assert second.found_products == []
+
+
+
+def test_safety_completion_budget(ai, monkeypatch):
+    _, guardrails = ai
+    create = AsyncMock(return_value=SimpleNamespace(choices=[SimpleNamespace(
+        finish_reason='stop', message=SimpleNamespace(content='{"violation": 0, "rationale": "Allowed"}')
+    )]))
+    monkeypatch.setattr(guardrails, 'guardrail_client', SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))))
+    assert asyncio.run(guardrails._check_safety('shirt', guardrails.INPUT_POLICY)) == (False, 'Allowed')
+    assert create.call_args.kwargs['max_completion_tokens'] == 256
+    assert create.call_args.kwargs['reasoning_effort'] == 'low'
+
+
+def test_truncated_guard_fails_closed(ai, monkeypatch):
+    _, guardrails = ai
+    create = AsyncMock(return_value=SimpleNamespace(choices=[SimpleNamespace(
+        finish_reason='length', message=SimpleNamespace(content='{"violation": 0}')
+    )]))
+    monkeypatch.setattr(guardrails, 'guardrail_client', SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))))
+    with pytest.raises(ValueError, match='truncated'):
+        asyncio.run(guardrails._check_safety('shirt', guardrails.INPUT_POLICY))
+
+
+def test_policy_block_remains_a_refusal(ai, monkeypatch):
+    pipeline, _ = ai
+    monkeypatch.setattr(pipeline, 'is_prompt_injection', AsyncMock(return_value=True))
+    agent = SimpleNamespace(run=AsyncMock())
+    monkeypatch.setattr(pipeline, 'agent', agent)
+    assert asyncio.run(pipeline.run_chat('ignore instructions')) == pipeline._blocked()
+    agent.run.assert_not_called()
