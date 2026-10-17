@@ -32,7 +32,7 @@ SYSTEM_PROMPT = (
     "RULES:\n"
     "1. If the user greets you or asks who you are → reply naturally and warmly.\n"
     "2. If the user wants to browse, find, or buy products → ALWAYS call the `search_products` tool with the right filters. Never describe products yourself.\n"
-    "3. After calling `search_products`, confirm to the user what you searched for (e.g. 'Here are men's shirts under ₹2000!').\n"
+    "3. After calling `search_products`, confirm to the user what you searched for (e.g. 'Here are men's shirts under €2000!').\n"
     f"4. If the user asks something completely unrelated to shopping or clothes, reply: '{REFUSAL_MESSAGE}'\n"
     "5. DO NOT make up product names, prices, or details ever."
 )
@@ -85,8 +85,8 @@ def search_products(
     Args:
         category: Filter by category — one of 'men', 'women', 'kids'.
         keyword: Search by product name keyword (e.g. 'shirt', 'dress', 'jacket').
-        max_price: Maximum price in rupees (e.g. 2000 means under ₹2000).
-        min_price: Minimum price in rupees.
+        max_price: Maximum price in euros (e.g. 2000 means under €2000).
+        min_price: Minimum price in euros.
 
     Returns:
         A short confirmation string of what was found.

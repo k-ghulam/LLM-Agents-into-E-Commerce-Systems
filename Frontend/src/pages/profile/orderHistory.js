@@ -16,7 +16,7 @@ export function renderOrderHistory(orders) {
                    <p style="font-weight: bold; color: #111827;">${escapeHtml(o.product_name)}</p>
                    <p class="muted" style="font-size: 0.85rem;">Qty: ${escapeHtml(o.quantity)}${o.created_at ? ` • ${new Date(o.created_at).toLocaleDateString()}` : ''}</p>
                  </div>
-                 <p class="price-lg">₹${o.price * o.quantity}</p>
+                 <p class="price-lg">€${o.price * o.quantity}</p>
                </div>`).join('')}
            </div>`}
     </div>

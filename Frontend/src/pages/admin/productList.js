@@ -15,7 +15,7 @@ export function renderProductList() {
           <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />
           <h3>${escapeHtml(p.name)}</h3>
           <p>${escapeHtml(p.description)}</p>
-          <p class="price">₹${escapeHtml(p.price)}</p>
+          <p class="price">€${escapeHtml(p.price)}</p>
           <p class="meta">Category: ${escapeHtml(p.category)}</p>
           <p class="meta">Sizes: ${escapeHtml(p.size?.join(', ') || 'N/A')}</p>
           <div class="product-actions">

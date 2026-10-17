@@ -92,7 +92,7 @@ dataset = Dataset(
         # --- Product queries: the agent must actually call search_products ---
         Case(
             name="product query - shirts under budget",
-            inputs="show me shirts under 1000 rupees",
+            inputs="show me shirts under 1000 euros",
             evaluators=(called_search_tool, GuardrailBlocked(should_be_blocked=False)),
         ),
         Case(

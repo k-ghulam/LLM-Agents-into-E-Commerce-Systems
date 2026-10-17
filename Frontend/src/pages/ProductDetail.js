@@ -39,7 +39,7 @@ export async function renderProductDetail(id) {
         <div class="product-detail-info">
           <span class="product-detail-category">${escapeHtml(product.category)}</span>
           <h1>${escapeHtml(product.name)}</h1>
-          <p class="product-detail-price">₹${escapeHtml(product.price)}</p>
+          <p class="product-detail-price">€${escapeHtml(product.price)}</p>
           <p class="product-detail-desc">${escapeHtml(product.description)}</p>
           ${sizes.length ? `
             <div class="option-group">

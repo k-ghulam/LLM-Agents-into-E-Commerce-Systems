@@ -58,7 +58,7 @@ export async function renderCart() {
       </div>
       <div class="cart-total-row">
         <h2 style="font-size: 1.5rem; font-weight: bold;">Catalog Total (Demo):</h2>
-        <span style="font-size: 1.5rem; font-weight: bold; color: #111827;">₹${total}</span>
+        <span style="font-size: 1.5rem; font-weight: bold; color: #111827;">€${total}</span>
       </div>
       <div class="cart-actions">
         <a href="#/" class="btn btn-outline" style="flex: 1; text-align: center;">Keep Shopping</a>
@@ -80,7 +80,7 @@ function renderCartItem(item) {
         <h3 style="font-weight: bold; font-size: 1.1rem; color: #111827;">${escapeHtml(item.product_name)}</h3>
         <p class="muted">Qty: ${escapeHtml(item.quantity)}</p>
       </div>
-      <div class="price-lg">₹${escapeHtml(item.price)}</div>
+      <div class="price-lg">€${escapeHtml(item.price)}</div>
     </div>`;
 }
 

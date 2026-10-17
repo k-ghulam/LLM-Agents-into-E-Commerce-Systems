@@ -51,7 +51,7 @@ function renderMessage(msg) {
              <div class="product-recommendation" data-id="${escapeHtml(p.id)}">
                <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />
                <p>${escapeHtml(p.name)}</p>
-               <p class="price">₹${escapeHtml(p.price)}</p>
+               <p class="price">€${escapeHtml(p.price)}</p>
              </div>`).join('')}
          </div>`;
     return `
