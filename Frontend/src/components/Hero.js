@@ -1,47 +1,5 @@
+import { icon } from "../utils/icons.js";
 export function renderHero() {
-  return `
-  <div class="hero">
-    <div class="container hero-grid">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <span>KooshkWear Collection</span>
-        </div>
-        <h1 class="hero-title">Elevate Your Style with Premium Fashion</h1>
-        <p class="hero-desc">Discover our curated collection of timeless pieces that blend sophistication with modern design.</p>
-        <div class="hero-actions">
-          <button class="btn btn-primary" id="heroShopNow">Shop Now</button>
-          <button class="btn btn-outline" id="heroViewCatalog">View Catalog</button>
-        </div>
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <p>EUR</p>
-            <p>Prices in Euros</p>
-          </div>
-          <div class="hero-stat">
-            <p>AI</p>
-            <p>Shopping Assistant</p>
-          </div>
-          <div class="hero-stat">
-            <p>DEMO</p>
-            <p>No Payments Taken</p>
-          </div>
-        </div>
-      </div>
-      <div class="hero-image-container">
-        <div class="hero-image-bg"></div>
-        <img src="https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Fashion Model" class="hero-image" />
-      </div>
-    </div>
-    <div class="hero-decoration-1"></div>
-    <div class="hero-decoration-2"></div>
-  </div>
-`;
+  return `<section class="editorial-hero container" aria-labelledby="hero-title"><div class="editorial-copy"><p class="eyebrow">A NEW PERSPECTIVE ON EVERYDAY STYLE</p><h1 id="hero-title">Wear what<br>feels like <em>you.</em></h1><p class="hero-intro">From everyday essentials to your next favourite piece. Explore clothing for women, men and little ones.</p><div class="hero-actions"><a class="btn btn-primary" href="#/?cat=women">Explore womenswear ${icon("arrow")}</a><a class="text-link" href="#/?cat=men">Discover menswear ${icon("arrow")}</a></div><div class="hero-caption"><span class="hero-caption-line"></span>YOUR STYLE. YOUR EVERYDAY.</div></div><div class="editorial-image"><img src="https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=1000" alt="Fashion editorial showing a styled womenswear outfit" fetchpriority="high"/><div class="hero-image-label"><span>THE EVERYDAY EDIT</span><span>KooshkWear / Collection</span></div></div></section><div class="collection-strip container"><span>WOMEN · MEN · KIDS</span><span>PRICES IN EUR</span><span>YOUR PERSONAL SHOPPING ASSISTANT</span></div>`;
 }
-
-/** Both hero call-to-action buttons jump the user down to the product grid. */
-export function wireHeroEvents() {
-  const scrollToProducts = () =>
-    document.querySelector('.products-section')?.scrollIntoView({ behavior: 'smooth' });
-  document.getElementById('heroShopNow')?.addEventListener('click', scrollToProducts);
-  document.getElementById('heroViewCatalog')?.addEventListener('click', scrollToProducts);
-}
+export function wireHeroEvents() {}

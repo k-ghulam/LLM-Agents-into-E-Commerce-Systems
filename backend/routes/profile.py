@@ -6,7 +6,7 @@ import logfire
 from pymongo.errors import DuplicateKeyError
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 
-from ..database import users_collection, cart_collection, sessions_collection
+from ..database import users_collection, cart_collection, sessions_collection, wishlist_collection
 from ..auth import current_user, require_owner, issue_session
 from ..models import ProfileUpdate, AccountDelete
 from ..utils.images import encode_upload_to_base64, to_data_url
@@ -116,6 +116,7 @@ def delete_account(payload: AccountDelete, user: dict = Depends(current_user)):
         raise HTTPException(status_code=401, detail="Incorrect password")
 
     sessions_collection.delete_many({"user_id": user["_id"]})
+    wishlist_collection.delete_many({"user_id": user["_id"]})
     users_collection.delete_one({"_id": user["_id"]})
     cart_collection.delete_many({"user_email": email})
     logfire.info("Account deleted: {email}", email=email)

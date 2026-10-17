@@ -7,6 +7,7 @@ import logfire
 from fastapi import APIRouter, Depends, HTTPException
 from ..auth import current_user, require_owner
 from ..models import Order
+from ..utils.stock import check_demo_stock
 from ..utils.money import stored_cents, public_money
 from ..database import orders_collection, products_collection
 
@@ -25,6 +26,7 @@ def place_order(order: Order, user: dict = Depends(current_user)):
     if len(matches) != 1:
         raise HTTPException(409, "Product is missing or its name is ambiguous")
     product = matches[0]
+    check_demo_stock(product, order.quantity)
     try:
         unit_cents = stored_cents(product)
     except (ValueError, KeyError):
@@ -32,6 +34,7 @@ def place_order(order: Order, user: dict = Depends(current_user)):
     order_data = order.model_dump(exclude={"price"})
     order_data.update(user_email=email, price_cents=unit_cents, currency="EUR",
                       total_cents=unit_cents * order.quantity, product_id=str(product["_id"]))
+    order_data.update(order_kind="demo", payment_status="not_charged", fulfillment_status="not_applicable")
     order_data["created_at"] = datetime.now(timezone.utc).isoformat()
     orders_collection.insert_one(order_data)
     logfire.info(

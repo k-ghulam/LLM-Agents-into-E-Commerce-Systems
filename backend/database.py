@@ -20,6 +20,7 @@ users_collection = db["users"]
 products_collection = db["products"]
 orders_collection = db["orders"]
 cart_collection = db["cart"]
+wishlist_collection = db["wishlist"]
 
 
 def ensure_indexes() -> None:
@@ -27,6 +28,8 @@ def ensure_indexes() -> None:
     Create the unique indexes that enforce one account per email and per
     username at the database level. Idempotent — safe to call on every startup.
     """
+    wishlist_collection.create_index("user_id", unique=True)
+    products_collection.create_index([("category", 1), ("price_cents", 1)])
     users_collection.create_index("email", unique=True)
     users_collection.create_index("username", unique=True, name="accounts_username_ci", collation={"locale": "en", "strength": 2})
     sessions_collection.create_index("token_hash", unique=True)

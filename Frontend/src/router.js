@@ -1,11 +1,13 @@
-import { renderHome } from './pages/Home.js';
-import { renderAdmin } from './pages/Admin.js';
-import { renderProductDetail } from './pages/ProductDetail.js';
-import { renderCart } from './pages/Cart.js';
-import { renderProfile } from './pages/Profile.js';
-import { mountHeader } from './components/Header.js';
-import { state, resetTransientUi } from './services/state.js';
-import { navigate, currentRoute } from './services/nav.js';
+import { renderWishlist } from "./pages/Wishlist.js";
+import { renderHelp } from "./pages/Help.js";
+import { renderHome } from "./pages/Home.js";
+import { renderAdmin } from "./pages/Admin.js";
+import { renderProductDetail } from "./pages/ProductDetail.js";
+import { renderCart } from "./pages/Cart.js";
+import { renderProfile } from "./pages/Profile.js";
+import { mountHeader } from "./components/Header.js";
+import { state, resetTransientUi } from "./services/state.js";
+import { navigate, currentRoute } from "./services/nav.js";
 
 let lastPath = null;
 
@@ -21,20 +23,27 @@ export async function router() {
 
   mountHeader();
 
-  if (path === '/add-products' || path === '/admin') {
+  if (path === "/add-products" || path === "/admin") {
     if (!state.isAdmin) {
-      alert('Admins only.');
-      navigate('#/');
+      alert("Admins only.");
+      navigate("#/");
       return;
     }
     await renderAdmin();
-  } else if (path === '/cart') {
+  } else if (path === "/wishlist") {
+    await renderWishlist();
+  } else if (path === "/help") {
+    renderHelp();
+  } else if (path === "/cart") {
     await renderCart();
-  } else if (path === '/profile') {
+  } else if (path === "/profile") {
     await renderProfile();
-  } else if (path.startsWith('/product/')) {
-    await renderProductDetail(path.split('/')[2]);
-  } else {
+  } else if (path.startsWith("/product/")) {
+    await renderProductDetail(path.split("/")[2]);
+  } else if (path === "/") {
     await renderHome();
+  } else {
+    document.getElementById("app").innerHTML =
+      '<div class="container empty-state"><h1>This page isn’t in the collection.</h1><a class="btn btn-primary" href="#/">Back to KooshkWear</a></div>';
   }
 }

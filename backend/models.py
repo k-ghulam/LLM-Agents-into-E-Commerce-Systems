@@ -28,6 +28,7 @@ class Product(BaseModel):
     size: List[str]        # e.g. ["S", "M", "L", "XL"]
     color: List[str]       # e.g. ["Black", "Blue"]
     image: HttpUrl             # image URL
+    stock_quantity: Optional[int] = Field(default=None, ge=0, le=1000000, strict=True)
 
 
 class Order(BaseModel):

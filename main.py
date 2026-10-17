@@ -3,10 +3,11 @@ from pathlib import Path
 
 import logfire
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
+from backend.auth import current_user
 from fastapi.staticfiles import StaticFiles
 
-from backend.routes import products, products_bulk, orders, cart, chatbot, auth, google_auth, profile
+from backend.routes import products, products_bulk, orders, cart, chatbot, auth, google_auth, profile, wishlist
 from backend.config import settings
 from backend.database import ensure_indexes, client
 from backend.middleware import SecurityMiddleware
@@ -44,7 +45,7 @@ logfire.instrument_pydantic()
 logfire.instrument_pydantic_ai()  # agent run traces + online-evaluation events
 
 # The monolith serves every endpoint — both halves of each route module.
-ROUTE_MODULES = (products, products_bulk, orders, cart, chatbot, auth, google_auth, profile)
+ROUTE_MODULES = (products, products_bulk, orders, cart, chatbot, auth, google_auth, profile, wishlist)
 for module in ROUTE_MODULES:
     app.include_router(module.read_router)
     app.include_router(module.write_router)
@@ -59,7 +60,13 @@ def frontend_config():
     services' ingestion port), which isn't running here and breaks any write
     call (e.g. Google sign-in) with a fetch failure.
     """
-    return {"ingestion_base_url": ""}
+    return {"ingestion_base_url": "", "commerce_mode": "preview", "payments_enabled": False,
+            "currency": "EUR", "inventory_reservations_enabled": False}
+
+
+@app.post("/checkout", tags=["Commerce"])
+def checkout(user: dict = Depends(current_user)):
+    raise HTTPException(503, "Online payment is not enabled. Only demo orders are available.")
 
 
 @app.get("/health")

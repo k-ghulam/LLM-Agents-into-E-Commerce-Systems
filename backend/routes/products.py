@@ -3,14 +3,16 @@ Single-product routes: add, list, get one, update, delete. Bulk ingestion
 (JSON bulk-add and the Excel + images-zip upload) lives in products_bulk.py.
 """
 import base64
-from typing import Optional
+from typing import Optional, Literal
 
 import logfire
-from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, Response, UploadFile, File, Form, HTTPException, Depends, Query
 from bson import ObjectId
 from bson.errors import InvalidId
 
 from ..database import products_collection
+from ..utils.stock import public_stock
+from ..utils.mongo import case_insensitive_contains
 from ..utils.money import EuroAmount, cents, public_money
 from ..auth import require_admin
 from ..utils.images import encode_upload_to_base64, resolve_image_field
@@ -35,7 +37,7 @@ def _public_product(product: dict) -> dict:
     product["id"] = str(product["_id"])
     product.pop("_id", None)
     resolve_image_field(product)
-    return public_money(product)
+    return public_stock(public_money(product))
 
 
 @write_router.post("")
@@ -43,6 +45,7 @@ async def add_product(
     name: str = Form(..., min_length=1, max_length=200),
     description: str = Form(..., min_length=1, max_length=4000),
     price: EuroAmount = Form(..., ge=0),
+    stock_quantity: int = Form(-1, ge=-1, le=1000000),
     category: str = Form(..., pattern="^(men|women|kids)$"),
     size: str = Form("M,L"),
     color: str = Form("Black"),
@@ -60,6 +63,7 @@ async def add_product(
         "description": description,
         "price_cents": cents(price),
         "currency": "EUR",
+        "stock_quantity": None if stock_quantity == -1 else stock_quantity,
         "category": category,
         "size": size.split(","),
         "color": color.split(","),
@@ -85,6 +89,48 @@ def get_products(category: str = "", min_price: Optional[EuroAmount] = None, max
     for product in products_collection.find(query):
         products.append(_public_product(product))
     return products
+
+
+@read_router.get("/search")
+def search_catalog(
+    q: str = Query("", max_length=120),
+    category: Literal["", "men", "women", "kids"] = "",
+    min_price: Optional[EuroAmount] = None,
+    max_price: Optional[EuroAmount] = None,
+    size: str = Query("", max_length=40),
+    color: str = Query("", max_length=60),
+    in_stock: bool = False,
+    sort: Literal["newest", "price_asc", "price_desc", "name"] = "newest",
+    page: int = Query(1, ge=1, le=10000),
+    limit: int = Query(12, ge=1, le=48),
+):
+    """Paginated storefront search; original /products remains compatible."""
+    if min_price is not None and max_price is not None and min_price > max_price:
+        raise HTTPException(422, "Minimum price must not exceed maximum price")
+    clauses = []
+    if category:
+        clauses.append({"category": case_insensitive_exact(category)})
+    if q.strip():
+        pattern = case_insensitive_contains(q.strip())
+        clauses.append({"$or": [{"name": pattern}, {"description": pattern}]})
+    if bounds := price_range_filter(min_price, max_price):
+        clauses.append(bounds)
+    for field, value in (("size", size), ("color", color)):
+        if value.strip():
+            clauses.append({field: case_insensitive_exact(value.strip())})
+    if in_stock:
+        clauses.append({"stock_quantity": {"$gt": 0}})
+    query = {"$and": clauses} if clauses else {}
+    order = {"newest": {"_id": -1}, "price_asc": {"_sort_price": 1, "_id": 1},
+             "price_desc": {"_sort_price": -1, "_id": 1}, "name": {"_sort_name": 1, "_id": 1}}[sort]
+    pipeline = [{"$match": query}, {"$addFields": {
+        "_sort_price": {"$ifNull": ["$price_cents", {"$multiply": ["$price", 100]}]},
+        "_sort_name": {"$toLower": "$name"}}},
+        {"$sort": order}, {"$skip": (page - 1) * limit}, {"$limit": limit},
+        {"$project": {"_sort_price": 0, "_sort_name": 0}}]
+    total = products_collection.count_documents(query)
+    return {"items": [_public_product(product) for product in products_collection.aggregate(pipeline)],
+            "total": total, "page": page, "limit": limit, "has_more": page * limit < total}
 
 
 @read_router.get("/{id}")
@@ -144,6 +190,7 @@ async def update_product(
     name: str = Form(None, min_length=1, max_length=200),
     description: str = Form(None, min_length=1, max_length=4000),
     price: EuroAmount = Form(None, ge=0),
+    stock_quantity: Optional[int] = Form(None, ge=-1, le=1000000),
     category: str = Form(None, pattern="^(men|women|kids)$"),
     size: str = Form(None),
     color: str = Form(None),
@@ -164,6 +211,8 @@ async def update_product(
     if price is not None:
         update_data["price_cents"] = cents(price)
         update_data["currency"] = "EUR"
+    if stock_quantity is not None:
+        update_data["stock_quantity"] = None if stock_quantity == -1 else stock_quantity
     if category is not None:
         update_data["category"] = category
     if size is not None:

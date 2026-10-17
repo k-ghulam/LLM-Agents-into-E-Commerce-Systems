@@ -27,7 +27,7 @@ The review process was: inventory the archives → compare the Python/JavaScript
 | Other users' carts, order histories, profiles and avatars could be accessed by email | Account routes require a session and enforce ownership. Client email remains a compatibility field, never proof of identity. |
 | Login did not create a server-verified session | Registration, password login and verified Google login now create an eight-hour session. Logout revokes it; profile changes revoke prior sessions and issue a replacement. |
 | Browser could submit a forged unit price | Order price and product ID are copied from the database. Missing or ambiguously named products are rejected. |
-| Cart updates used a read-then-write race | Atomic MongoDB upsert/increment with a unique account/product index. |
+| Cart updates used a read-then-write race | A unique account/product index and conditional quantity updates prevent lost increments. The preview update retries competing updates and checks the recorded stock count. This does not reserve inventory. |
 | Uploads were unbounded and trusted MIME labels | 24 MiB streamed request cap, per-file limits, Pillow raster verification, pixel limits and ZIP expansion/duplicate checks. SVG uploads are rejected. |
 | Malformed guards or provider outages allowed unscreened AI responses | Guard failures now refuse the request/response. Chat has a typed 2,000-character limit, a 30-second pipeline budget and a five-request/tool-call budget. |
 | Store startup depended on AI credentials | Provider initialization is deferred until configured chat is requested. Store and accounts work without AI. |
@@ -154,7 +154,7 @@ node scripts/check-money.mjs
 
 The frontend check needs Node 20+ and parses browser modules without executing them.
 
-Tests use a fresh in-memory MongoDB fake per test and mocked AI calls. They cover authorization, session expiry/revocation, account isolation, pricing, image validation, ZIP limits, rate limits, bulk row validation and guard failure handling. They do not validate a hosted MongoDB connection, real Google OAuth, provider responses, a payment flow, Docker execution or browser interaction. The latest offline suite passed **52 tests**, all **34 browser JavaScript modules** parsed successfully, and integer-cent frontend arithmetic checks passed. See [VALIDATION.md](docs/VALIDATION.md) for the earlier recorded baseline. The user separately reported successful application startup with Atlas; this is not an end-to-end production validation.
+Tests use a fresh in-memory MongoDB fake per test and mocked AI calls. They cover authorization, session expiry/revocation, account isolation, pricing, image validation, ZIP limits, rate limits, bulk row validation and guard failure handling. They do not validate a hosted MongoDB connection, real Google OAuth, provider responses, a payment flow, Docker execution or browser interaction. The luxury-preview update passes **61 offline tests**, parses **39 browser JavaScript modules**, and passes integer-cent arithmetic and storefront module checks. Browser and responsive visual verification of the new design is pending. See [VALIDATION.md](docs/VALIDATION.md) for the earlier recorded baseline. The user separately reported successful application startup with Atlas; this is not an end-to-end production validation.
 
 Live AI evaluation is a separate, paid-network operation and is **not** part of normal CI:
 
@@ -207,3 +207,44 @@ Display prices and AI currency examples use euros. New prices use integer cents;
 The change was traced through JSON and form ingestion, Excel import, mixed old/new catalog filters, the shopping agent, cart totals and demo order snapshots. Decimal parsing rejects negative, non-finite and sub-cent amounts rather than rounding them silently. Inputs are limited to EUR 1,000,000 per unit. Order prices come from the catalog, regardless of browser submissions. New orders store `price_cents`, `total_cents` and `currency`; legacy history remains readable. Updating a product price replaces that product's legacy price field only.
 
 See [Render setup](docs/RENDER.md) for the prepared hosting configuration, private secret entry and live verification steps. The Docker command supports Render's `PORT` variable. This is a FastAPI application; it can run directly as a Render web service without rewriting it in Streamlit. No public URL has been validated yet.
+
+## Luxury storefront preparation — free tools, payment disabled
+
+This release prepares an original KooshkWear shopping experience: editorial hero and typography, visible catalog search, a paginated filter sidebar, price/name sorting, product favourites, product availability, an editable shopping bag and a store guide. It takes general usability ideas from established stores without reproducing their branding, code, reviews or claims. It retains KooshkTech's developer/customizer credit and the original provenance section.
+
+The frontend uses the existing vanilla JavaScript/FastAPI stack. No paid UI kit, font subscription, payment SDK, new hosting resource or additional runtime dependency is introduced. Existing external provider and hosting usage remains subject to those accounts' limits. The existing editorial hero image is retained; image rights and actual product photography still need review before commercial release.
+
+The process was: verify the exact GitHub baseline `363582e` → trace current catalog/cart/account APIs → add compatible search and wishlist endpoints → add explicit preview capabilities and recorded stock checks → redesign the connected pages → exercise backend regressions and frontend module logic → package a reversible update. The project now has 61 offline tests. These include wishlist isolation/caps/account cleanup, literal search, mixed legacy and cents prices, pagination, inventory checks, cart edits and an interleaved cart update. See [PREVIEW-READINESS.md](docs/PREVIEW-READINESS.md) for changes, limitations and the route to real commerce.
+
+### Added storefront APIs
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /products/search` | Paginated search, category, EUR min/max, size, colour, stock and sorting |
+| `GET /wishlist` | Current account's saved products; authentication required |
+| `PUT /wishlist/{product_id}` | Idempotently save an existing product, max 200 per account |
+| `DELETE /wishlist/{product_id}` | Remove from the current account's wishlist |
+| `PUT /cart/item` | Set the current account's product quantity |
+| `DELETE /cart/item?product_name=...` | Remove one current-account cart item |
+| `POST /checkout` | Always returns HTTP 503 for authenticated users: real payment is disabled |
+
+`GET /config` advertises `commerce_mode: preview`, `payments_enabled: false` and `inventory_reservations_enabled: false`. This is a deliberate closed boundary, not a simulated successful payment. Adding an environment variable cannot enable real commerce by itself.
+
+### Stock and favourites
+
+Admin supports an optional **Recorded stock** count. Blank means availability is unconfirmed; zero means out of stock. JSON bulk import accepts `stock_quantity` as a nonnegative integer or null; Excel accepts an optional numeric whole-number column of the same name. The multipart admin API uses `-1` to clear that optional count. Existing products without the field remain readable and unchanged. Product-level stock is not size/colour inventory, and demo orders neither reserve nor decrement it.
+
+Signed-in favourites live in MongoDB, keyed by immutable user ID, and are removed on account deletion. Guest favourites are saved on that browser only. Guest and account lists are intentionally separate. Product reads retain their original API compatibility; the new storefront uses `/products/search`.
+
+### Validate this update
+
+```bash
+python -m pytest -q
+python -m compileall -q backend main.py
+python -m pip check
+node scripts/check-frontend.mjs
+node scripts/check-money.mjs
+node --experimental-vm-modules scripts/check-storefront.mjs
+```
+
+The last command uses Node's built-in VM module test support and does not need npm packages. It validates wishlist identity isolation, guest persistence, stale catalog-response protection and escaped search text. It does not render a browser or prove accessibility/layout correctness.

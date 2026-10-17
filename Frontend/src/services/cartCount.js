@@ -1,6 +1,6 @@
-import { state } from './state.js';
-import { getCart } from './api/cart.js';
-import { mountHeader } from '../components/Header.js';
+import { state } from "./state.js";
+import { getCart } from "./api/cart.js";
+import { mountHeader } from "../components/Header.js";
 
 /**
  * The one place `state.cartItemCount` is written. Sets the badge count and
@@ -16,10 +16,14 @@ export function setCartCount(count) {
  * Swallows failures (the badge is a convenience, not critical).
  */
 export async function refreshCartCount() {
+  if (!state.isLoggedIn) {
+    setCartCount(0);
+    return 0;
+  }
   try {
     const items = await getCart(state.sessionId);
     setCartCount(items.reduce((sum, item) => sum + (item.quantity || 0), 0));
   } catch (err) {
-    console.error('Failed to refresh cart count:', err);
+    console.error("Failed to refresh cart count:", err);
   }
 }

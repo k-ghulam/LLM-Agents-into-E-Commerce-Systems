@@ -3,20 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KooshkWear - E-Commerce Store</title>
+    <title>KooshkWear — Your Everyday, Reconsidered</title>
+    <meta
+      name="description"
+      content="Discover KooshkWear: clothing for women, men and kids. Explore the collection, save your favourites and find your style with our shopping assistant. Preview store; payments are not enabled."
+    />
+    <meta name="theme-color" content="#202b29" />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111827'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-size='18' font-weight='700' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E"
     />
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/luxury.css" />
   </head>
   <body>
     <div id="site-header"></div>
-    <main id="app"></main>
+    <a class="skip-link" href="#app">Skip to content</a>
+    <main id="app" tabindex="-1"></main>
     <div id="chatbot-root"></div>
     <script type="module" src="/src/main.js"></script>
-    <footer id="developer-credit" style="padding: 1.5rem 5rem 1.5rem 1rem; text-align: center; color: #475569; font-size: 0.875rem;">
-      Developed and customized by <strong>KooshkTech</strong>
+    <footer class="store-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="footer-brand" href="#/">KooshkWear</a>
+          <p>Your everyday, reconsidered.</p>
+          <span class="footer-preview">PREVIEW STORE · NO PAYMENTS</span>
+        </div>
+        <div>
+          <h2>Explore</h2>
+          <a href="#/?cat=women">Womenswear</a><a href="#/?cat=men">Menswear</a
+          ><a href="#/?cat=kids">Kidswear</a>
+        </div>
+        <div>
+          <h2>Your KooshkWear</h2>
+          <a href="#/profile">Your account</a
+          ><a href="#/wishlist">Your favourites</a
+          ><a href="#/cart">Shopping bag</a>
+        </div>
+        <div>
+          <h2>A little guidance</h2>
+          <a href="#/help">Shopping &amp; order guide</a>
+          <p>Prices in EUR.<br />Real checkout is coming later.</p>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <span>KooshkWear / Made for your everyday.</span
+        ><span id="developer-credit"
+          >Developed and customized by <strong>KooshkTech</strong></span
+        >
+      </div>
     </footer>
   </body>
 </html>

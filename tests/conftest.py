@@ -20,7 +20,7 @@ def isolated_config(monkeypatch):
 def client(monkeypatch):
     import backend.database as database
     db = mongomock.MongoClient(tz_aware=True).ecommerce_db
-    collections = {name + "_collection": db[name] for name in ("users", "products", "orders", "cart", "sessions", "rate_limits")}
+    collections = {name + "_collection": db[name] for name in ("users", "products", "orders", "cart", "sessions", "rate_limits", "wishlist")}
     for attr, value in collections.items():
         monkeypatch.setattr(database, attr, value)
     import main

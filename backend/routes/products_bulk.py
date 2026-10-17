@@ -13,6 +13,11 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 
 from ..models import Product
 from ..utils.money import cents, euros
+from pydantic import TypeAdapter
+from typing import Annotated, Optional
+from pydantic import Field
+
+_STOCK = TypeAdapter(Optional[Annotated[int, Field(ge=0, le=1000000, strict=True)]])
 from ..utils.images import read_limited, validate_image
 from ..utils.uploads import validate_zip
 from pydantic import ValidationError
@@ -122,10 +127,11 @@ async def bulk_upload_products(
             continue
 
         try:
+            stock = _STOCK.validate_python(row_data.get("stock_quantity"))
             Product(name=name, description=description, price=price, category=category,
                     size=["M"], color=["Black"], image="https://example.com/image.png")
         except ValidationError:
-            errors.append({"row": row_num, "reason": "Invalid product name, description, price or category"})
+            errors.append({"row": row_num, "reason": "Invalid product name, description, price, category or stock quantity"})
             continue
 
         archive_path = image_lookup.get(image_filename.lower())
@@ -148,6 +154,7 @@ async def bulk_upload_products(
             "description": description,
             "price_cents": cents(price),
             "currency": "EUR",
+            "stock_quantity": stock,
             "category": category,
             "size": [s.strip() for s in size_raw.split(",") if s.strip()],
             "color": [c.strip() for c in color_raw.split(",") if c.strip()],

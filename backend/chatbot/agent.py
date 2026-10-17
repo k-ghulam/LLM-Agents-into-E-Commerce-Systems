@@ -16,6 +16,7 @@ from ..config import REFUSAL_MESSAGE, settings
 from ..database import products_collection
 from ..utils.images import resolve_image_field
 from ..utils.money import EuroAmount, public_money
+from ..utils.stock import public_stock
 from ..utils.mongo import case_insensitive_contains, case_insensitive_exact, price_range_filter
 from ..utils.llm_gateway import (
     PORTKEY_API_KEY,
@@ -112,7 +113,7 @@ def search_products(
         r["id"] = str(r["_id"])
         r.pop("_id", None)
         resolve_image_field(r)
-        public_money(r)
+        public_stock(public_money(r))
         processed.append(r)
 
     # Store results so the endpoint can send them to the frontend
