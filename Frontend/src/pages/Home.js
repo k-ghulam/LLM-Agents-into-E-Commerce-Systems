@@ -1,3 +1,4 @@
+import { formatEUR, priceCents } from '../utils/money.js';
 import { state } from '../services/state.js';
 import { fetchProducts } from '../services/api_v2.js';
 import { handleAddToCartClick } from '../services/cartActions.js';
@@ -67,7 +68,7 @@ function renderProductCard(p) {
         <h3 class="product-name">${escapeHtml(p.name)}</h3>
         <p class="product-desc">${escapeHtml(p.description)}</p>
         <div class="product-footer">
-          <span class="product-price">€${escapeHtml(p.price)}</span>
+          <span class="product-price">${formatEUR(priceCents(p))}</span>
           <span class="product-category">${escapeHtml(p.category)}</span>
         </div>
         <button class="add-to-cart-btn" data-id="${id}">Add to Cart</button>

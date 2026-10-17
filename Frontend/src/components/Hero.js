@@ -14,16 +14,16 @@ export function renderHero() {
         </div>
         <div class="hero-stats">
           <div class="hero-stat">
-            <p>500+</p>
-            <p>Premium Products</p>
+            <p>EUR</p>
+            <p>Prices in Euros</p>
           </div>
           <div class="hero-stat">
-            <p>50K+</p>
-            <p>Happy Customers</p>
+            <p>AI</p>
+            <p>Shopping Assistant</p>
           </div>
           <div class="hero-stat">
-            <p>4.9</p>
-            <p>Average Rating</p>
+            <p>DEMO</p>
+            <p>No Payments Taken</p>
           </div>
         </div>
       </div>

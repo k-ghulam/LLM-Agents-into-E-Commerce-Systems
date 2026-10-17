@@ -15,6 +15,7 @@ from pydantic_ai.providers.openai import OpenAIProvider
 from ..config import REFUSAL_MESSAGE, settings
 from ..database import products_collection
 from ..utils.images import resolve_image_field
+from ..utils.money import EuroAmount, public_money
 from ..utils.mongo import case_insensitive_contains, case_insensitive_exact, price_range_filter
 from ..utils.llm_gateway import (
     PORTKEY_API_KEY,
@@ -77,8 +78,8 @@ def search_products(
     ctx: RunContext[StoreDeps],
     category: Optional[str] = None,
     keyword: Optional[str] = None,
-    max_price: Optional[int] = None,
-    min_price: Optional[int] = None,
+    max_price: Optional[EuroAmount] = None,
+    min_price: Optional[EuroAmount] = None,
 ) -> str:
     """
     Search the KooshkWear product database.
@@ -102,7 +103,7 @@ def search_products(
 
     price_filter = price_range_filter(min_price, max_price)
     if price_filter:
-        query["price"] = price_filter
+        query.update(price_filter)
 
     raw_results = list(products_collection.find(query).limit(8))
 
@@ -111,6 +112,7 @@ def search_products(
         r["id"] = str(r["_id"])
         r.pop("_id", None)
         resolve_image_field(r)
+        public_money(r)
         processed.append(r)
 
     # Store results so the endpoint can send them to the frontend

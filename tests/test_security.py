@@ -70,7 +70,7 @@ def test_server_prices_and_cart_increment(client, account):
     assert db.cart.count_documents({}) == 1
     assert db.cart.find_one()["quantity"] == 4
     assert api.post("/orders", json={**data, "price": 1}, headers=account).status_code == 200
-    assert db.orders.find_one()["price"] == 499
+    assert db.orders.find_one()["price_cents"] == 49900
     assert "product_id" in db.orders.find_one()
     assert api.post("/orders", json={**data, "product_name": "Missing", "price": 1}, headers=account).status_code == 409
     db.products.insert_one({"name": "Shirt", "price": 999})
@@ -146,7 +146,7 @@ def test_bulk_workbook_partial_errors(client, account):
     sheet.append(['name', 'description', 'price', 'category', 'image'])
     sheet.append(['Shirt', 'Cotton shirt', 499, 'men', 'shirt.png'])
     sheet.append(['Bad price', 'Cotton shirt', -1, 'men', 'shirt.png'])
-    sheet.append(['Fraction', 'Cotton shirt', 1.5, 'men', 'shirt.png'])
+    sheet.append(['Fraction', 'Cotton shirt', 19.99, 'men', 'shirt.png'])
     sheet.append(['Invalid category', 'Cotton shirt', 499, 'unknown', 'shirt.png'])
     excel = io.BytesIO(); workbook.save(excel)
     image = io.BytesIO(); Image.new('RGB', (2, 2)).save(image, format='PNG')
@@ -157,9 +157,10 @@ def test_bulk_workbook_partial_errors(client, account):
         'images_zip': ('images.zip', archive.getvalue()),
     }, headers=account)
     assert response.status_code == 200, response.text
-    assert response.json()['inserted'] == 1
-    assert response.json()['failed'] == 3
-    assert db.products.count_documents({}) == 1
+    assert response.json()['inserted'] == 2
+    assert response.json()['failed'] == 2
+    assert db.products.find_one({'name': 'Fraction'})['price_cents'] == 1999
+    assert db.products.count_documents({}) == 2
 
 
 def test_admin_product_round_trip_and_negative_price(client, account):
@@ -174,7 +175,7 @@ def test_admin_product_round_trip_and_negative_price(client, account):
     assert 'image_data' not in product
     assert api.get(product['image']).headers['content-type'] == 'image/png'
     assert api.put('/products/' + product['id'], data={'price': '456'}, headers=account).status_code == 200
-    assert api.get('/products/' + product['id']).json()['price'] == 456
+    assert api.get('/products/' + product['id']).json()['price'] == '456.00'
     assert api.delete('/products/' + product['id'], headers=account).status_code == 200
     assert api.get('/products/' + product['id']).status_code == 404
 

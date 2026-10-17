@@ -5,7 +5,7 @@
 
 A clothing-store integration project: FastAPI, MongoDB, a vanilla JavaScript storefront, and a read-only AI shopping assistant built with Pydantic AI and Groq. Maintained repository: [k-ghulam/LLM-Agents-into-E-Commerce-Systems](https://github.com/k-ghulam/LLM-Agents-into-E-Commerce-Systems).
 
-**Status: a hardened demonstration, not a production commerce service.** Orders are records only: no money is charged, no inventory is reserved, and there is no payment processor or fulfillment integration. Prices are displayed in **euros (€)** using whole-euro integers. Relabelling the currency does not convert existing catalog amounts; review prices before importing or displaying products. Decimal prices such as `19.99` require a separate money-model update. Do not use customer data until the remaining release work below is complete.
+**Status: a hardened demonstration, not a production commerce service.** Orders are records only: no money is charged, no inventory is reserved, and there is no payment processor or fulfillment integration. Prices support exact **EUR (€)** amounts such as `19.99`. New writes store integer `price_cents` and currency `EUR`; API responses include a two-decimal `price` string. Existing whole-euro `price` records remain readable without a bulk database rewrite. This does not convert exchange rates; review original catalog amounts. Do not use customer data until the remaining release work below is complete.
 
 ## What was reviewed and how it was improved
 
@@ -137,7 +137,7 @@ Run this script only with your authorized database connection, for the account y
 
 ### First product and demo order
 
-Add a test product in Admin with a JPEG/PNG/WebP image and an intended whole-euro price, for example `25` for €25. Browse the product, add it to your cart, and check its quantity and price. Demo orders do not charge money.
+Add a test product in Admin with a JPEG/PNG/WebP image and an intended EUR price, for example `19.99` for €19.99. Browse the product, add it to your cart, and check its quantity and price. Demo orders do not charge money.
 
 An unauthenticated cart request may return HTTP 401; sign in before using account/cart features. The application startup message confirms startup indexes were created, not that every feature has been validated.
 
@@ -149,11 +149,12 @@ python -m pytest -q
 python -m compileall -q backend main.py
 python -m pip check
 node scripts/check-frontend.mjs
+node scripts/check-money.mjs
 ```
 
 The frontend check needs Node 20+ and parses browser modules without executing them.
 
-Tests use a fresh in-memory MongoDB fake per test and mocked AI calls. They cover authorization, session expiry/revocation, account isolation, pricing, image validation, ZIP limits, rate limits, bulk row validation and guard failure handling. They do not validate a hosted MongoDB connection, real Google OAuth, provider responses, a payment flow, Docker execution or browser interaction. The maintained offline suite passed **35 tests**, and all **33 browser JavaScript modules** parsed successfully during the KooshkWear update. See [VALIDATION.md](docs/VALIDATION.md) for the earlier recorded baseline. The user separately reported successful application startup with Atlas; this is not an end-to-end production validation.
+Tests use a fresh in-memory MongoDB fake per test and mocked AI calls. They cover authorization, session expiry/revocation, account isolation, pricing, image validation, ZIP limits, rate limits, bulk row validation and guard failure handling. They do not validate a hosted MongoDB connection, real Google OAuth, provider responses, a payment flow, Docker execution or browser interaction. The latest offline suite passed **52 tests**, all **34 browser JavaScript modules** parsed successfully, and integer-cent frontend arithmetic checks passed. See [VALIDATION.md](docs/VALIDATION.md) for the earlier recorded baseline. The user separately reported successful application startup with Atlas; this is not an end-to-end production validation.
 
 Live AI evaluation is a separate, paid-network operation and is **not** part of normal CI:
 
@@ -199,4 +200,10 @@ Developed and customized by **KooshkTech**.
 
 The storefront name is KooshkWear. KooshkTech is the developer/customizer credit, not the storefront name. This credit does not claim exclusive authorship of the uploaded source; original provenance, third-party acknowledgements and applicable license obligations remain in force.
 
-Display prices and AI currency examples use euros. No exchange-rate conversion or decimal-price migration is performed. Review existing catalog amounts manually. This update does not read or change `.env`, credentials, stored database data, session namespaces or cloud configuration.
+Display prices and AI currency examples use euros. New prices use integer cents; legacy integer prices are read as whole euros. No exchange-rate conversion or automatic bulk database rewrite is performed. Review existing catalog amounts manually. This update does not read or change `.env`, credentials, stored database data, session namespaces or cloud configuration.
+
+## Decimal EUR and public demo hosting
+
+The change was traced through JSON and form ingestion, Excel import, mixed old/new catalog filters, the shopping agent, cart totals and demo order snapshots. Decimal parsing rejects negative, non-finite and sub-cent amounts rather than rounding them silently. Inputs are limited to EUR 1,000,000 per unit. Order prices come from the catalog, regardless of browser submissions. New orders store `price_cents`, `total_cents` and `currency`; legacy history remains readable. Updating a product price replaces that product's legacy price field only.
+
+See [Render setup](docs/RENDER.md) for the prepared hosting configuration, private secret entry and live verification steps. The Docker command supports Render's `PORT` variable. This is a FastAPI application; it can run directly as a Render web service without rewriting it in Streamlit. No public URL has been validated yet.

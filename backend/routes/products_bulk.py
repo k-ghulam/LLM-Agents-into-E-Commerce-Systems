@@ -12,6 +12,7 @@ import openpyxl
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 
 from ..models import Product
+from ..utils.money import cents, euros
 from ..utils.images import read_limited, validate_image
 from ..utils.uploads import validate_zip
 from pydantic import ValidationError
@@ -32,7 +33,7 @@ def add_multiple_products(products_list: list[Product], admin_email: str = Depen
     """
     if not 1 <= len(products_list) <= 500:
         raise HTTPException(422, "Supply between 1 and 500 products")
-    product_list = [product.model_dump(mode="json") for product in products_list]
+    product_list = [{**product.model_dump(mode="json", exclude={"price"}), "price_cents": cents(product.price), "currency": "EUR"} for product in products_list]
     products_collection.insert_many(product_list)
     return {"message": "Multiple products added successfully"}
 
@@ -115,9 +116,7 @@ async def bulk_upload_products(
             continue
 
         try:
-            price = int(price_raw)
-            if isinstance(price_raw, bool) or price < 0 or float(price_raw) != price:
-                raise ValueError("Invalid price")
+            price = euros(price_raw)
         except (TypeError, ValueError, OverflowError):
             errors.append({"row": row_num, "reason": f"Invalid price value: {price_raw!r}"})
             continue
@@ -147,7 +146,8 @@ async def bulk_upload_products(
         products_to_insert.append({
             "name": name,
             "description": description,
-            "price": price,
+            "price_cents": cents(price),
+            "currency": "EUR",
             "category": category,
             "size": [s.strip() for s in size_raw.split(",") if s.strip()],
             "color": [c.strip() for c in color_raw.split(",") if c.strip()],

@@ -1,3 +1,4 @@
+import { formatEUR, priceCents } from '../utils/money.js';
 import { state } from '../services/state.js';
 import { fetchProduct, placeOrder } from '../services/api_v2.js';
 import { handleAddToCartClick } from '../services/cartActions.js';
@@ -39,7 +40,7 @@ export async function renderProductDetail(id) {
         <div class="product-detail-info">
           <span class="product-detail-category">${escapeHtml(product.category)}</span>
           <h1>${escapeHtml(product.name)}</h1>
-          <p class="product-detail-price">€${escapeHtml(product.price)}</p>
+          <p class="product-detail-price">${formatEUR(priceCents(product))}</p>
           <p class="product-detail-desc">${escapeHtml(product.description)}</p>
           ${sizes.length ? `
             <div class="option-group">

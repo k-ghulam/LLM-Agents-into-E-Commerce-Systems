@@ -2,6 +2,7 @@
 Shared MongoDB query-fragment helpers.
 """
 import re
+from .money import cents
 
 
 def case_insensitive_exact(value: str) -> dict:
@@ -14,11 +15,18 @@ def case_insensitive_contains(value: str) -> dict:
     return {"$regex": re.escape(value), "$options": "i"}
 
 
-def price_range_filter(min_price: int = None, max_price: int = None) -> dict:
-    """Query fragment for a price range; empty dict if neither bound is given."""
-    price_query = {}
+def price_range_filter(min_price=None, max_price=None) -> dict:
+    """Match canonical cents and legacy whole-EUR documents, inclusively."""
+    canonical, legacy = {}, {}
     if min_price is not None:
-        price_query["$gte"] = min_price
+        value = cents(min_price)
+        canonical["$gte"] = value
+        legacy["$gte"] = (value + 99) // 100
     if max_price is not None:
-        price_query["$lte"] = max_price
-    return price_query
+        value = cents(max_price)
+        canonical["$lte"] = value
+        legacy["$lte"] = value // 100
+    if not canonical:
+        return {}
+    return {"$or": [{"price_cents": canonical},
+                    {"price_cents": {"$exists": False}, "price": legacy}]}

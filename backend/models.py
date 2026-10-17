@@ -10,6 +10,7 @@ multipart and does not use a model — the image is uploaded and stored as base6
 `Product` below is only the JSON bulk-add shape, where `image` is a URL string.
 """
 from typing import List, Optional
+from .utils.money import EuroAmount
 
 from pydantic import BaseModel, Field, EmailStr, HttpUrl, field_validator
 
@@ -22,7 +23,7 @@ class Product(BaseModel):
     """One product in a `POST /products/bulk` JSON payload (image is a URL)."""
     name: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=4000)
-    price: int = Field(ge=0)
+    price: EuroAmount = Field(ge=0)
     category: str = Field(pattern="^(men|women|kids)$")
     size: List[str]        # e.g. ["S", "M", "L", "XL"]
     color: List[str]       # e.g. ["Black", "Blue"]
@@ -34,7 +35,7 @@ class Order(BaseModel):
     user_email: EmailStr
     product_name: str = Field(min_length=1, max_length=200)
     quantity: int = Field(ge=1, le=100)
-    price: int = Field(ge=0)   # unit price at time of order
+    price: EuroAmount = Field(default=0, ge=0)   # compatibility only; server selects price
 
 
 class CartItem(BaseModel):

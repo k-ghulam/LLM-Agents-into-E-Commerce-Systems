@@ -1,3 +1,4 @@
+import { formatEUR, priceCents } from '../../utils/money.js';
 import { state } from '../../services/state.js';
 import { deleteProduct } from '../../services/api_v2.js';
 import { escapeHtml } from '../../utils/escapeHtml.js';
@@ -15,7 +16,7 @@ export function renderProductList() {
           <img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" />
           <h3>${escapeHtml(p.name)}</h3>
           <p>${escapeHtml(p.description)}</p>
-          <p class="price">€${escapeHtml(p.price)}</p>
+          <p class="price">${formatEUR(priceCents(p))}</p>
           <p class="meta">Category: ${escapeHtml(p.category)}</p>
           <p class="meta">Sizes: ${escapeHtml(p.size?.join(', ') || 'N/A')}</p>
           <div class="product-actions">

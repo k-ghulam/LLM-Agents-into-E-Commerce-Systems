@@ -7,6 +7,7 @@ import logfire
 from fastapi import APIRouter, Depends, HTTPException
 from ..auth import current_user, require_owner
 from ..models import Order
+from ..utils.money import stored_cents, public_money
 from ..database import orders_collection, products_collection
 
 # Split so the read replica / write replica of the deployment can each mount only
@@ -24,17 +25,20 @@ def place_order(order: Order, user: dict = Depends(current_user)):
     if len(matches) != 1:
         raise HTTPException(409, "Product is missing or its name is ambiguous")
     product = matches[0]
-    if not isinstance(product.get("price"), int) or product["price"] < 0:
+    try:
+        unit_cents = stored_cents(product)
+    except (ValueError, KeyError):
         raise HTTPException(409, "Invalid catalog price")
-    order_data = order.model_dump()
-    order_data.update(user_email=email, price=product["price"], product_id=str(product["_id"]))
+    order_data = order.model_dump(exclude={"price"})
+    order_data.update(user_email=email, price_cents=unit_cents, currency="EUR",
+                      total_cents=unit_cents * order.quantity, product_id=str(product["_id"]))
     order_data["created_at"] = datetime.now(timezone.utc).isoformat()
     orders_collection.insert_one(order_data)
     logfire.info(
         "Order placed: {quantity}x {product} @ {price} by {user}",
         quantity=order.quantity,
         product=order.product_name,
-        price=product["price"],
+        price=unit_cents / 100,
         user=order.user_email,
     )
     return {"message": "Order placed successfully"}
@@ -49,4 +53,4 @@ def get_order_history(user_email: str, user: dict = Depends(current_user)):
     orders = list(
         orders_collection.find({"user_email": user_email}, {"_id": 0}).sort("created_at", -1)
     )
-    return orders
+    return [public_money(order) for order in orders]

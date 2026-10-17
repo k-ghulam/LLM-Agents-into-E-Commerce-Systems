@@ -22,3 +22,4 @@ jobs:
       - run: python -m pytest -q
       - run: python -m compileall -q backend main.py
       - run: node scripts/check-frontend.mjs
+      - run: node scripts/check-money.mjs

@@ -125,3 +125,15 @@ def test_matching_search_keeps_product_cards(ai, monkeypatch):
     assert response['type'] == 'products'
     assert response['data'][0]['name'] == 'Test Dress'
     assert response['message'] == 'Here is a matching dress.'
+
+
+def test_search_tool_decimal_bounds(client, ai):
+    from backend.chatbot.agent import search_products, StoreDeps
+    api, db = client
+    db.products.insert_many([
+        {"name": "Dress", "category": "women", "price_cents": 1999, "currency": "EUR"},
+        {"name": "Old Dress", "category": "women", "price": 20}])
+    deps = StoreDeps()
+    search_products(SimpleNamespace(deps=deps), category="women", max_price="19.99")
+    assert [p["name"] for p in deps.found_products] == ["Dress"]
+    assert deps.found_products[0]["price"] == "19.99"

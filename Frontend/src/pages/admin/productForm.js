@@ -1,3 +1,4 @@
+import { parseEUR } from '../../utils/money.js';
 import { state, resetAdminForm } from '../../services/state.js';
 import { addProduct, updateProduct } from '../../services/api_v2.js';
 import { escapeHtml } from '../../utils/escapeHtml.js';
@@ -15,7 +16,7 @@ export function renderProductForm() {
       <div class="form-grid">
         <input placeholder="Name" class="form-input" id="adminName" value="${escapeHtml(state.adminForm.name)}" />
         <input placeholder="Description" class="form-input" id="adminDesc" value="${escapeHtml(state.adminForm.description)}" />
-        <input placeholder="Price" type="number" min="0" step="1" class="form-input" id="adminPrice" value="${escapeHtml(state.adminForm.price || '')}" />
+        <input placeholder="Price" type="number" min="0" step="0.01" class="form-input" id="adminPrice" value="${escapeHtml(state.adminForm.price ?? '')}" />
 
         <div class="form-col-span">
           <label class="form-label">Category:</label>
@@ -66,7 +67,7 @@ export function setupProductFormEvents(rerender) {
   // Preserve edits when category selection redraws the form.
   for (const [id, field] of [['adminName', 'name'], ['adminDesc', 'description'], ['adminPrice', 'price'], ['adminColor', 'color']]) {
     document.getElementById(id)?.addEventListener('input', (event) => {
-      state.adminForm[field] = field === 'price' ? Number(event.target.value)
+      state.adminForm[field] = field === 'price' ? event.target.value
         : field === 'color' ? event.target.value.split(',').map(value => value.trim()) : event.target.value;
     });
   }
@@ -129,11 +130,11 @@ function collectAdminForm() {
   const adminForm = state.adminForm;
   adminForm.name = document.getElementById('adminName').value.trim();
   adminForm.description = document.getElementById('adminDesc').value.trim();
-  adminForm.price = Number(document.getElementById('adminPrice').value);
+  adminForm.price = document.getElementById('adminPrice').value.trim();
   adminForm.color = document.getElementById('adminColor').value.split(',').map(c => c.trim()).filter(Boolean);
   // category is already set on state by the category buttons
 
-  if (!adminForm.name || !adminForm.description || (!Number.isInteger(adminForm.price) || adminForm.price < 0) || !adminForm.category) {
+  if (!adminForm.name || !adminForm.description || parseEUR(adminForm.price) === null || !adminForm.category) {
     alert('Please fill in all fields');
     return false;
   }

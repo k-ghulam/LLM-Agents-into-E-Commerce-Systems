@@ -1,3 +1,4 @@
+import { formatEUR, priceCents } from '../utils/money.js';
 import { state } from '../services/state.js';
 import { getCart, placeOrder, clearCart, fetchProducts } from '../services/api_v2.js';
 import { setCartCount } from '../services/cartCount.js';
@@ -26,7 +27,8 @@ export async function renderCart() {
       const match = productsDB.find(p => p.name === item.product_name) || {};
       return {
         ...item,
-        price: match.price || 0,
+        price: match.price,
+        price_cents: priceCents(match),
         image: match.image || PLACEHOLDER_IMAGE,
       };
     });
@@ -48,7 +50,7 @@ export async function renderCart() {
     return;
   }
 
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cartItems.reduce((sum, item) => sum + priceCents(item) * item.quantity, 0);
   setCartCount(cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0));
 
   contentDiv.innerHTML = `
@@ -58,7 +60,7 @@ export async function renderCart() {
       </div>
       <div class="cart-total-row">
         <h2 style="font-size: 1.5rem; font-weight: bold;">Catalog Total (Demo):</h2>
-        <span style="font-size: 1.5rem; font-weight: bold; color: #111827;">€${total}</span>
+        <span style="font-size: 1.5rem; font-weight: bold; color: #111827;">${formatEUR(total)}</span>
       </div>
       <div class="cart-actions">
         <a href="#/" class="btn btn-outline" style="flex: 1; text-align: center;">Keep Shopping</a>
@@ -80,7 +82,7 @@ function renderCartItem(item) {
         <h3 style="font-weight: bold; font-size: 1.1rem; color: #111827;">${escapeHtml(item.product_name)}</h3>
         <p class="muted">Qty: ${escapeHtml(item.quantity)}</p>
       </div>
-      <div class="price-lg">€${escapeHtml(item.price)}</div>
+      <div class="price-lg">${formatEUR(priceCents(item))}</div>
     </div>`;
 }
 

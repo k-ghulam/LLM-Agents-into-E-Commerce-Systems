@@ -11,6 +11,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 
 from ..database import products_collection
+from ..utils.money import EuroAmount, cents, public_money
 from ..auth import require_admin
 from ..utils.images import encode_upload_to_base64, resolve_image_field
 from ..utils.mongo import case_insensitive_exact, price_range_filter
@@ -34,14 +35,14 @@ def _public_product(product: dict) -> dict:
     product["id"] = str(product["_id"])
     product.pop("_id", None)
     resolve_image_field(product)
-    return product
+    return public_money(product)
 
 
 @write_router.post("")
 async def add_product(
     name: str = Form(..., min_length=1, max_length=200),
     description: str = Form(..., min_length=1, max_length=4000),
-    price: int = Form(..., ge=0),
+    price: EuroAmount = Form(..., ge=0),
     category: str = Form(..., pattern="^(men|women|kids)$"),
     size: str = Form("M,L"),
     color: str = Form("Black"),
@@ -57,7 +58,8 @@ async def add_product(
     product = {
         "name": name,
         "description": description,
-        "price": price,
+        "price_cents": cents(price),
+        "currency": "EUR",
         "category": category,
         "size": size.split(","),
         "color": color.split(","),
@@ -69,7 +71,7 @@ async def add_product(
 
 
 @read_router.get("")
-def get_products(category: str = "", min_price: Optional[int] = None, max_price: Optional[int] = None):
+def get_products(category: str = "", min_price: Optional[EuroAmount] = None, max_price: Optional[EuroAmount] = None):
     """
     Get products with optional category, min_price, and max_price filters.
     """
@@ -78,7 +80,7 @@ def get_products(category: str = "", min_price: Optional[int] = None, max_price:
 
     price_query = price_range_filter(min_price, max_price)
     if price_query:
-        query["price"] = price_query
+        query.update(price_query)
 
     for product in products_collection.find(query):
         products.append(_public_product(product))
@@ -141,7 +143,7 @@ async def update_product(
     id: str,
     name: str = Form(None, min_length=1, max_length=200),
     description: str = Form(None, min_length=1, max_length=4000),
-    price: int = Form(None, ge=0),
+    price: EuroAmount = Form(None, ge=0),
     category: str = Form(None, pattern="^(men|women|kids)$"),
     size: str = Form(None),
     color: str = Form(None),
@@ -160,7 +162,8 @@ async def update_product(
     if description is not None:
         update_data["description"] = description
     if price is not None:
-        update_data["price"] = price
+        update_data["price_cents"] = cents(price)
+        update_data["currency"] = "EUR"
     if category is not None:
         update_data["category"] = category
     if size is not None:
@@ -175,7 +178,7 @@ async def update_product(
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
 
-    result = products_collection.update_one({"_id": object_id}, {"$set": update_data})
+    result = products_collection.update_one({"_id": object_id}, {"$set": update_data, **({"$unset": {"price": ""}} if price is not None else {})})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
 

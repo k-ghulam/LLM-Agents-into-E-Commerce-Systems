@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+const source = await readFile(new URL('../Frontend/src/utils/money.js', import.meta.url), 'utf8');
+const {parseEUR, priceCents, formatEUR} = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+assert.equal(parseEUR('0.10') + parseEUR('0.20'), 30);
+assert.equal(priceCents({price_cents: 1999}) * 3, 5997);
+assert.equal(priceCents({price: 35}), 3500);
+assert.equal(parseEUR('1.001'), null);
+assert.equal(parseEUR(''), null);
+assert.equal(formatEUR(5997), '€59.97');
+console.log('EUR arithmetic and formatting passed');
