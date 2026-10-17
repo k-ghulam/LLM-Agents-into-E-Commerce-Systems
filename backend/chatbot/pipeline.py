@@ -71,6 +71,11 @@ async def run_chat(message: str) -> dict:
     try:
         result = await agent.run(user_message, deps=deps, usage_limits=UsageLimits(request_limit=5, tool_calls_limit=5))
         text_reply = result.output  # plain string from the LLM
+        if deps.search_performed and not deps.found_products:
+            text_reply = (
+                "No products matched your search. "
+                "Try a different price range, category or keyword."
+            )
 
         # Output guard: screen the agent's reply before it reaches the user.
         # Fails closed (logs + refuses) if the guardrail call itself errors.

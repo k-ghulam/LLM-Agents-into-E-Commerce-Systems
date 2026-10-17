@@ -41,6 +41,7 @@ SYSTEM_PROMPT = (
 class StoreDeps(BaseModel):
     """Side-channel for a single agent run: the products `search_products` found."""
     found_products: List[Dict[str, Any]] = Field(default_factory=list)
+    search_performed: bool = False
 
 
 if is_portkey_configured():
@@ -114,6 +115,7 @@ def search_products(
 
     # Store results so the endpoint can send them to the frontend
     ctx.deps.found_products = processed
+    ctx.deps.search_performed = True
 
     if not processed:
         return "No products found matching those filters."
