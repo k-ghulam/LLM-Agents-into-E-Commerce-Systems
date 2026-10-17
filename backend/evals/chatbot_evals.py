@@ -1,5 +1,5 @@
 """
-Pydantic Evals suite for the LUXE shopping assistant (backend/chatbot/pipeline.py).
+Pydantic Evals suite for the KooshkWear shopping assistant (backend/chatbot/pipeline.py).
 
 Covers:
 - The agent actually calls the `search_products` tool for product queries — checked

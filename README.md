@@ -192,3 +192,11 @@ No verified business address, support email, phone number, VAT ID, domain regist
 ## License and provenance
 
 The uploaded README claimed MIT, but the archive did not include a license file or ownership evidence. No new license grant is invented here. Confirm source and demo-image rights, then add the appropriate `LICENSE` before redistribution beyond your authorized repository work.
+
+## Development and customization
+
+Developed and customized by **KooshkTech**.
+
+The storefront name is KooshkWear. KooshkTech is the developer/customizer credit, not the storefront name. This credit does not claim exclusive authorship of the uploaded source; original provenance, third-party acknowledgements and applicable license obligations remain in force.
+
+Display prices and AI currency examples use euros. No exchange-rate conversion or decimal-price migration is performed. Review existing catalog amounts manually. This update does not read or change `.env`, credentials, stored database data, session namespaces or cloud configuration.

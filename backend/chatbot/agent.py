@@ -1,6 +1,6 @@
 """
 The Pydantic AI shopping agent: system prompt, dependencies, and its
-`search_products` tool for querying the LUXE MongoDB catalog.
+`search_products` tool for querying the KooshkWear MongoDB catalog.
 
 Routed through Portkey when configured (see utils/llm_gateway.py), otherwise
 talks to Groq directly.
@@ -26,7 +26,7 @@ from ..utils.llm_gateway import (
 RAW_AGENT_MODEL = settings.agent_model_name
 
 SYSTEM_PROMPT = (
-    "You are a friendly shopping assistant for LUXE — an online clothing store. "
+    "You are a friendly shopping assistant for KooshkWear — an online clothing store. "
     "The store has 3 categories: men, women, and kids."
     "\n\n"
     "RULES:\n"
@@ -80,7 +80,7 @@ def search_products(
     min_price: Optional[int] = None,
 ) -> str:
     """
-    Search the LUXE product database.
+    Search the KooshkWear product database.
 
     Args:
         category: Filter by category — one of 'men', 'women', 'kids'.

@@ -24,7 +24,7 @@ export function renderHeader() {
     <div class="container header-inner">
       <div class="header-left">
         <button class="menu-btn" id="menuToggle" aria-label="Toggle menu">${ICON_MENU}</button>
-        <button class="header-logo" data-nav="#/">LUXE</button>
+        <button class="header-logo" data-nav="#/">KooshkWear</button>
         <nav class="nav" id="mainNav">
           ${CATEGORIES.map(c => `
             <button class="nav-link ${currentCategory === c.value ? 'active' : ''}" data-cat="${c.value}">${c.label}</button>

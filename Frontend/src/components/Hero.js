@@ -4,7 +4,7 @@ export function renderHero() {
     <div class="container hero-grid">
       <div class="hero-content">
         <div class="hero-badge">
-          <span>New Collection 2026</span>
+          <span>KooshkWear Collection</span>
         </div>
         <h1 class="hero-title">Elevate Your Style with Premium Fashion</h1>
         <p class="hero-desc">Discover our curated collection of timeless pieces that blend sophistication with modern design.</p>

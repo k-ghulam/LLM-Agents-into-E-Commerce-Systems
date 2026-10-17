@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 
 # Initialize FastAPI app
-app = FastAPI(title="LUXE Commerce API", lifespan=lifespan)
+app = FastAPI(title="KooshkWear Commerce API", lifespan=lifespan)
 app.add_middleware(SecurityMiddleware)
 
 logfire.instrument_fastapi(app)
