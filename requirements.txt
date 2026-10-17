@@ -1,0 +1,19 @@
+# Direct dependencies, pinned to the validated environment.
+fastapi==0.143.3
+uvicorn==0.54.0
+python-multipart==0.0.32
+pydantic==2.14.1
+pydantic-settings==2.16.0
+python-dotenv==1.2.4
+email-validator==2.3.0
+pymongo==4.19.0
+bcrypt==5.0.0
+google-auth==2.62.0
+requests==2.34.2
+openpyxl==3.1.5
+pillow==13.0.0
+pydantic-ai-slim[openai,groq]==2.57.0
+pydantic-evals[logfire]==2.57.0
+groq==1.7.0
+openai==3.33.0
+logfire[fastapi]==5.2.0
